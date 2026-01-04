@@ -32,7 +32,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 5000}`,
+        url: `https://sao-ai-backend.onrender.com/`,
         description: 'Development server',
       },
     ],
