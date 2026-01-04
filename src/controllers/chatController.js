@@ -1,6 +1,6 @@
 const Chat = require('../models/Chat')
 const { validationResult } = require('express-validator')
-const { generateResponse } = require('../services/geminiService')
+const { generateResponse } = require('../services/aiService')
 
 // @desc    Get all chats for the user (only _id and title)
 // @route   GET /api/chats
