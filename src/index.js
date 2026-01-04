@@ -1,39 +1,41 @@
-const express = require('express')
-const dotenv = require('dotenv')
-const dns = require('dns')
+// ====================== server.js ======================
+const express = require('express');
+const dotenv = require('dotenv');
+const dns = require('dns');
+const cors = require('cors');
+const connectDB = require('./config/db');
+const authRoutes = require('./routes/authRoutes');
+const profileRoutes = require('./routes/profileRoutes');
+const chatRoutes = require('./routes/chatRoutes');
+const errorHandler = require('./middleware/errorHandler');
+const swaggerJsDoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
 
-// Force use Google DNS to avoid ETIMEOUT issues with MongoDB SRV
-dns.setServers(['8.8.8.8', '8.8.4.4'])
+// Загружаем переменные окружения
+dotenv.config();
 
-const cors = require('cors')
-const connectDB = require('./config/db')
-const authRoutes = require('./routes/authRoutes')
-const profileRoutes = require('./routes/profileRoutes')
-const chatRoutes = require('./routes/chatRoutes')
-const errorHandler = require('./middleware/errorHandler')
-const swaggerJsDoc = require('swagger-jsdoc')
-const swaggerUi = require('swagger-ui-express')
+// Принудительное использование Google DNS для MongoDB SRV
+dns.setServers(['8.8.8.8', '8.8.4.4']);
 
-dotenv.config()
+const app = express();
 
-const app = express()
+// Middleware
+app.use(cors());
+app.use(express.json());
 
-app.use(cors())
-app.use(express.json())
-
-// Swagger setup
+// ====================== Swagger ======================
 const swaggerOptions = {
   swaggerDefinition: {
     openapi: '3.0.0',
     info: {
       title: 'AI Chat API',
       version: '1.0.0',
-      description: 'API for AI chat application',
+      description: 'API для AI chat приложения',
     },
     servers: [
       {
-        url: `https://sao-ai-backend.onrender.com/`,
-        description: 'Development server',
+        url: process.env.SERVER_URL || 'http://localhost:5000',
+        description: 'Сервер разработки',
       },
     ],
     components: {
@@ -52,29 +54,34 @@ const swaggerOptions = {
     ],
   },
   apis: ['./src/routes/*.js'],
-}
+};
 
-const swaggerDocs = swaggerJsDoc(swaggerOptions)
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs))
+const swaggerDocs = swaggerJsDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Routes
-app.use('/api/auth', authRoutes)
-app.use('/api/profile', profileRoutes)
-app.use('/api/chats', chatRoutes)
+// ====================== Routes ======================
+app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/chats', chatRoutes);
 
-// Error Handler
-app.use(errorHandler)
+// ====================== Error Handler ======================
+app.use(errorHandler);
 
-// Connect to MongoDB and start server
+// ====================== Start Server ======================
 const startServer = async () => {
   try {
-    await connectDB()
-    const PORT = process.env.PORT || 5000
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+    // Подключение к MongoDB
+    await connectDB();
+    
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {
-    console.error('Failed to start server:', error)
-    process.exit(1)
+    console.error('Failed to start server:', error.message);
+    process.exit(1);
   }
-}
+};
 
-startServer()
+// Запуск сервера
+startServer();
+
+module.exports = app; // полезно для тестирования
